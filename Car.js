@@ -34,12 +34,12 @@ class Car {
     // > 0 means we're moving forward
     } else if (direction > 0) {
         this.moving = true;
-        this.velocity -= this.acceleration; // negative is up
+        this.velocity += this.acceleration;
 
     // < 0 means we're moving backward
     } else if (direction < 0) {
         this.moving = true;
-        this.velocity += this.acceleration; // positive is down
+        this.velocity -= this.acceleration;
     }
 
     // Check that the current velocity is not above the max
