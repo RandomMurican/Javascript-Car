@@ -1,30 +1,33 @@
 car = null;
+count = 0;
 var keyMap = {};
+var hazards = [];
 
 function init() {
     canvas = document.getElementById("canvas");
     context = canvas.getContext("2d");
-    car = new Car(0, 20, 10, 20);
+    car = new Car(canvas.width / 2 - 5, canvas.height / 2 - 10, 20, 40);
+    // carX[0] = new Hazard(car.x, car.y, 0);
     car.show(context);
     
     // Listen for key events and passes the key to its corresponding function
-    window.addEventListener("keydown", keypress_handler, false);
+    window.addEventListener("keydown", keydown_handler, false);
     window.addEventListener("keyup", keyup_handler, false);
    
     // This function is called every 30 milliseconds
     var moveInterval = setInterval(function () {
-
+        
         // If only the W key is being pressed, move up
         if (keyMap[87] && !keyMap[83]) {
-            car.gas(-1);
+            car.gas(-1, !!keyMap[32]);
 
         // If only the S key is being pressed, move down
         } else if (!keyMap[87] && keyMap[83]) {
-            car.gas(1);
+            car.gas(1, !!keyMap[32]);
 
         // Otherwise release the gas
         } else {
-            car.gas(0);
+            car.gas(0, !!keyMap[32]);
         }
 
         // If only the A key is being pressed, turn left
@@ -36,6 +39,13 @@ function init() {
             car.turn(1);
         }
 
+
+        if (collisionDetection()) {
+            document.getElementById("collision").innerHTML = "";
+        } else {
+            document.getElementById("collision").innerHTML = "not";
+        } 
+
         // Now that everything has moved,
         // draw everything on the screen
         draw();
@@ -43,20 +53,41 @@ function init() {
 }
 
 function draw() {
-    
+
     // get information about the canvas
     context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Do weird things so we can move and display everything
-    context.save();
+    // Display everything
+    // this.autoPilot();
     car.move();
     car.show(context);
-    context.restore();
+    showHazards(context);
+}
+
+function showHazards(ctx) {
+    totalHazards = document.getElementById("hazards").value;
+    canvasSize = document.getElementById("canvas").width;
+
+    if (totalHazards > hazards.length) {
+        for (i = totalHazards - hazards.length; i > 0; i--) {
+            hazards.push(new Hazard(Math.random() * canvasSize, Math.random() * canvasSize, Math.random() * 360, "purple"));
+        }
+    } else if (hazards.length > totalHazards) {
+        for (i = hazards.length - totalHazards; i > 0; i--) {
+            hazards.pop();
+        }
+    }
+    if (totalHazards > 0 && hazards.length == totalHazards) {
+        for (i = 0; i < totalHazards; i++) {
+            hazards[i].show(ctx);
+        }
+    }
 }
 
 function keyup_handler(event) {
     switch(event.keyCode) {
+        case 32:
         case 65:
         case 68:
         case 83:
@@ -69,9 +100,10 @@ function keyup_handler(event) {
     }
 }
 
-
-function keypress_handler(event) {
+function keydown_handler(event) {
+    console.log(event.keyCode);
     switch(event.keyCode) {
+        case 32:
         case 65:
         case 68:
         case 83:
@@ -82,6 +114,10 @@ function keypress_handler(event) {
         default:
             break;
     }
+}
+
+function collisionDetection() {
+    return car.collisionDetection(hazards);
 }
 
 // Wait until the window loads before starting the code
